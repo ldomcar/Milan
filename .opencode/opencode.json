@@ -1,0 +1,156 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+  "small_model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+
+  "provider": {
+    "Nvidia": {}
+  },
+
+  "disabled_providers": [],
+
+  "instructions": [
+    "Estás trabajando dentro de un Vault de Obsidian.",
+    "Eres un exgestor de fondos de inversión con 15 años de experiencia en el sector financiero y de inversiones, y también tienes 5 años de experiencia como quant.",
+    "Ayudarás al usuario a crear proyectos cuantitativos y analizar fundamental, cuantitativa y técnicamente empresas y todo tipo de activos.",
+    "Nunca inventes datos, si no sabes algo, di que no lo sabes.",
+    "Aplica cambios complejos mediante diffs o bloques específicos en lugar de reescribir todo el archivo.",
+    "Cuando se te pida generar código deberás hacerlo de la manera más simple pero efectiva, sin escribir líneas de más ni usar estructuras hipercomplejas que no aporten nada al funcionamiento del script."
+  ],
+
+  "default_agent": "orchestrator",
+  "subagent_depth": 2,
+
+  "agent": {
+    "orchestrator": {
+      "description": "Agente principal de planificación y coordinación para tareas complejas. Para tareas cuantitativas: delega la implementación a quant, después delega obligatoriamente la revisión a quant_revisor y finalmente integra ambos resultados. Para análisis fundamental: delega el análisis a senior_banker y utiliza news cuando la actualidad sea relevante. Para un análisis completo de una empresa: utiliza news para obtener los acontecimientos recientes, senior_banker para el análisis fundamental y valoración, quant para el análisis cuantitativo y modelos necesarios, quant_revisor para revisar el código y metodología cuantitativa, y finalmente integra todos los resultados en una única conclusión coherente. Para tareas mas cotidianas, o tareas largas que deberas fragmentar, delega en Local_qwen, no padras llamar en paralelo a este subagente o el sistema colapsara.", 
+      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "mode": "primary",
+      "permission": {
+       "edit": "ask",
+       "bash": "ask",
+       "task": {
+       "*": "allow"
+       }
+      }
+    },
+    "Local_qwen": {
+      "description": "Local qwen3.5-9B via Ollama. Use for: summarization (>500 lines), test stubs, log pattern extraction, data format conversion, code suggestions, financial news summaries. NOT for: architecture, production code, debugging, latest docs.",
+      "concurrency": 1,
+      "model": "local/Qwen3.8-9Bb",
+      "mode": "subagent",
+      "permission": {
+       "edit": "ask",
+       "bash": "ask",
+       "task": {
+       "*": "allow"
+       }
+      }
+    },
+    "quant": {
+      "description": "Agente especializado en finanzas cuantitativas y código de Python y C++. Escribe código para modelos cuantitativos asegurando resultados óptimos y correctos.",
+      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "mode": "subagent",
+      "permission": {
+       "edit": "ask",
+       "bash": "ask",
+       "task": {
+       "*": "allow"
+       }
+      }
+    },
+    "quant_revisor": {
+      "description": "Agente especializado en finanzas cuantitativas que revisa el código escrito por el agente quant y aporta ideas para el desarrollo de modelos cuantitativos.",
+      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "mode": "subagent",
+      "permission": {
+       "edit": "ask",
+       "bash": "ask",
+       "task": {
+       "*": "allow"
+       }
+      }
+    },
+    "senior_banker": {
+      "description": "Agente especializado en finanzas y análisis fundamental de empresas y activos. Analiza empresas y activos y da recomendaciones de compra o venta. En su análisis incluirá un exhaustivo análisis de riesgos, eventos próximos de la compañía, un resumen de los anteriores beneficios, los datos fundamentales, quién está en la directiva de la empresa, un desglose del modelo de negocio y qué tan eficiente es, el precio objetivo de Wall St y varios escenarios del precio con sus correspondientes probabilidades.",
+      "model": "nvidia/nvidia/nemotron-3-ultra-550b-a55b",
+      "mode": "subagent",
+      "permission": {
+       "edit": "ask",
+       "bash": "ask",
+       "task": {
+       "*": "allow"
+       }
+      }
+    },
+    "news": {
+      "description": "Agente especializado en noticias y eventos que puedan afectar a los mercados financieros. Analiza noticias y eventos y da recomendaciones.",
+      "model": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "prompt": "Analiza las noticias del día de mercado anterior del ticker/s indicados y elabora un resumen.",
+      "mode": "subagent",
+      "permission": {
+       "edit": "ask",
+       "bash": "ask",
+       "task": {
+       "*": "allow"
+       }
+      }
+    }
+  },
+
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp"],
+      "enabled": true,
+      "environment": {
+       "PLAYWRIGHT_HEADLESS": "true",
+       "PLAYWRIGHT_VIEWPORT_WIDTH": "1920",
+        "PLAYWRIGHT_VIEWPORT_HEIGHT": "1080" 
+      }
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true,
+      "environment": {}
+    },
+    "duckduckgo": {
+      "type": "local",
+      "command": ["npx", "-y", "duckduckgo-mcp-server"],
+      "enabled": true,
+      "environment": {}
+    },
+    "alphavantage": {
+      "type": "local",
+      "command": ["npx", "-y", "@gviper/alphavantage-mcp"],
+      "enabled": true,
+      "environment": {
+        "ALPHAVANTAGE_API_KEY": "LK7BSUG7BUQU6MNU"
+      }
+    },
+    "yahoo-finance": {
+      "type": "local",
+      "command": ["npx", "-y", "yahoo-finance-mcp"],
+      "enabled": true,
+      "environment": {}
+    },
+    "obsidian": {
+      "type": "local",
+      "command": ["npx", "-y", "obsidian-mcp-server@latest"],
+      "enabled": true,
+      "environment": {
+        "MCP_TRANSPORT_TYPE": "stdio",
+        "MCP_LOG_LEVEL": "info",
+        "OBSIDIAN_API_KEY": "c9aa0e18e8baa3f06ac2420aded563192495eeda6746204ba19d27d7f8f3ff94",
+        "OBSIDIAN_BASE_URL": "http://127.0.0.1:27124",
+        "OBSIDIAN_VERIFY_SSL": "false"
+      }
+    }
+  },
+  "permission": {
+    "edit": "ask",
+    "bash": "ask"
+  }
+}
